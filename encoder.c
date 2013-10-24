@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include "picture_t.h"
+#include "simplerecorder.h"
 
 #include "linux_lib/type.h"
 #include "linux_lib/H264encLibApi.h"
