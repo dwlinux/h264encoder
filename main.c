@@ -6,9 +6,9 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <signal.h>
 #include <time.h>
-#include <pthread.h> 
 #include <dirent.h>
 #include "picture_t.h"
 #include "simplerecorder.h"
@@ -17,17 +17,11 @@
 
 
 static int recording;
-static char osd_string[20];
 static char mkv_filename[100];
 static char dirname[20];
 static char tempname[20];
 static struct picture_t pic;
 
-static void gen_osd_info()
-{
-	time_t t = time(0);
-	strftime(osd_string, 20, "%Y-%m-%d %H:%M:%S",localtime(&t));
-}
 static void get_filename()
 {
 	time_t t = time(0);
@@ -56,14 +50,10 @@ int main()
 	errno = 0;
 	if(NULL==opendir("./Record"))
 		mkdir("./Record",0775);
-	if(!camera_init(&pic))
-		goto error_cam; 
 	if(!encoder_init(&pic)){
 		fprintf(stderr,"failed to initialize encoder\n");
 		goto error_encoder;
 	}
-	if(!preview_init(&pic))
-		goto error_preview;
 	get_filename();
 	printf("file:%s\n",mkv_filename);
 	if(!output_init(&pic,mkv_filename))
@@ -76,8 +66,6 @@ int main()
 	if(!output_write_headers(&header_pic))
 		goto error_output;
 	encoder_release(&encoded_pic);
-	if(!camera_on())
-		goto error_cam_on;
 	if(signal(SIGINT, stop_recording) == SIG_ERR){
 		fprintf(stderr,"signal() failed\n");
 		goto error_signal;
@@ -86,13 +74,8 @@ int main()
 	recording = 1;
 	FileSize =0;
 	for(i=0; recording; i++){
-		if(!camera_get_frame(&pic))
-			break;
-		gen_osd_info();
-		osd_print(&pic, osd_string);
 		//if((i&7)==0) // i%8==0 
 		gettimeofday(&tpstart,NULL);
-		preview_display(&pic);
 		gettimeofday(&tpend,NULL);
 		timeuse=1000000*(tpend.tv_sec-tpstart.tv_sec)+
 		tpend.tv_usec-tpstart.tv_usec;
@@ -101,7 +84,6 @@ int main()
 		FileSize+=encoded_pic.length;
 		if(!encoder_encode_frame(&pic, &encoded_pic))
 			break;
-		applog_flush();	
 		if ((FileSize>MAX_SIZE) && (encoded_pic.frame_type ==FRAME_TYPE_I)) {
 			output_close();	
 			get_filename();
@@ -125,20 +107,8 @@ int main()
 
 error_signal:
 	printf("error signal\n");
-	camera_off();
-error_cam_on:
-	printf("error cam\n");
-	output_close();
 error_output:
 	printf("error output\n");
-	preview_close();
-error_preview:
-    printf("error encode\n");
-	encoder_close();
 error_encoder:
-    printf("error cam\n");
-	camera_close();
-error_cam:
-    printf("error over\n");
 	return 0;
 }

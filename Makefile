@@ -1,15 +1,14 @@
 SOURCE=$(wildcard *.c)
-SDL-DIR = /usr/local/SDL_arm
 OBJS=$(patsubst %.c,%.o,$(SOURCE))
-CC=arm-none-linux-gnueabi-gcc
-CPP=arm-none-linux-gnueabi-g++
-CFLAGS  = -I$(SDL-DIR)/include
-LIBS	= -L$(SDL-DIR)/lib -lSDL
+CC=arm-linux-gnueabi-gcc
+CPP=arm-linux-gnueabi-g++
+CFLAGS  =
+LIBS	=
 
 all: simplerecorder
 
 simplerecorder: $(OBJS)
-	$(CPP) -Wall -o $@ $^ $(LIBS) -static -pthread -L. -lv4lconvert -lm -lrt ./linux_lib/libcedarv_osal.a ./linux_lib/libcedarxalloc.a ./linux_lib/libh264enc.a ./linux_lib/libcedarv.a
+	$(CPP) -Wall -o $@ $^ $(LIBS) -static -pthread -L. -lm -lrt ./linux_lib/libcedarv_osal.a ./linux_lib/libcedarxalloc.a ./linux_lib/libh264enc.a
 %.o: %.c
 	$(CC) -Wall -c $< -o $@ $(CFLAGS)
 
