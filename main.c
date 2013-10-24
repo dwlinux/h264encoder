@@ -36,8 +36,7 @@ static void get_filename()
 int main()
 {
 	int i,FileSize;
-	struct timeval tpstart,tpend;
-	float timeuse;
+	struct timeval tpstart;
 	struct encoded_pic_t encoded_pic,header_pic;
 	errno = 0;
 	if(NULL==opendir("./Record"))
@@ -59,16 +58,46 @@ int main()
 		goto error_output;
 	encoder_release(&encoded_pic);
 	FileSize =0;
-	for(i=0;; i++){
-		gettimeofday(&tpstart,NULL);
-		gettimeofday(&tpend,NULL);
-		timeuse=1000000*(tpend.tv_sec-tpstart.tv_sec)+
-		tpend.tv_usec-tpstart.tv_usec;
-		timeuse/=1000000;
-		//printf("usetime:%f\n",timeuse);
-		FileSize+=encoded_pic.length;
-		if(!encoder_encode_frame(&pic, &encoded_pic))
+	for(i=0 ;; i++){
+		char filename[128];
+		FILE *fp;
+
+		memset(&pic, 0, sizeof(pic));
+
+		// read input data from files named frame.0, frame.1, frame.2, ...
+		sprintf(filename, "frame.%d", i);
+		fp = fopen(filename, "r");
+		if (!fp)
 			break;
+
+		// input file format:
+		//    width:4
+		//    height:4
+		//    data:width*height/4*6
+		//        YUV420p image format
+		// note: width should probably be a multiple of 4 for now
+		fread(&pic.width, sizeof(int), 1, fp);
+		fread(&pic.height, sizeof(int), 1, fp);
+		if (!pic.width || !pic.height) {
+			fclose(fp);
+			break;
+		}
+		pic.buffer = malloc(pic.width * pic.height / 4 * 6);
+		if (!pic.buffer) {
+			fclose(fp);
+			break;
+		}
+		fread(pic.buffer, 1, pic.width * pic.height / 4 * 6, fp);
+		fclose(fp);
+		
+		gettimeofday(&tpstart,NULL);
+		pic.timestamp = tpstart;
+		FileSize+=encoded_pic.length;
+		if(!encoder_encode_frame(&pic, &encoded_pic)) {
+			free(pic.buffer);
+			break;
+		}
+		free(pic.buffer);
 		if ((FileSize>MAX_SIZE) && (encoded_pic.frame_type ==FRAME_TYPE_I)) {
 			output_close();	
 			get_filename();

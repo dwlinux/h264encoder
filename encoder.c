@@ -160,13 +160,8 @@ static void I420toNV12(unsigned char *pNV12, const unsigned char *pI420, int C_S
 	const unsigned char *pCr = pI420 + halfC;
 	int j;
 	for(j=0; j<halfC; j++){
-		*pNV12 = *pCb;
-		pNV12++;
-		*pNV12 = *pCr;
-		pNV12++;
-
-		pCr++;
-		pCb++;
+		*pNV12++ = *pCb++;
+		*pNV12++ = *pCr++;
 	}
 }
 int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output)
