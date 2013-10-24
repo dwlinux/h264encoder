@@ -12,11 +12,8 @@
 #include <dirent.h>
 #include "picture_t.h"
 #include "simplerecorder.h"
-#include "log.h"
 #define MAX_SIZE 1024*1024*10
 
-
-static int recording;
 static char mkv_filename[100];
 static char dirname[20];
 static char tempname[20];
@@ -35,11 +32,6 @@ static void get_filename()
 	strcat(mkv_filename,tempname);
 	strcat(mkv_filename,".mkv");
 }
-void stop_recording(int param)
-{
-	recording = 0;
-}
-
 
 int main()
 {
@@ -66,15 +58,8 @@ int main()
 	if(!output_write_headers(&header_pic))
 		goto error_output;
 	encoder_release(&encoded_pic);
-	if(signal(SIGINT, stop_recording) == SIG_ERR){
-		fprintf(stderr,"signal() failed\n");
-		goto error_signal;
-	}
-	printf("Press ctrl-c to stop recording...\n");
-	recording = 1;
 	FileSize =0;
-	for(i=0; recording; i++){
-		//if((i&7)==0) // i%8==0 
+	for(i=0;; i++){
 		gettimeofday(&tpstart,NULL);
 		gettimeofday(&tpend,NULL);
 		timeuse=1000000*(tpend.tv_sec-tpstart.tv_sec)+
@@ -105,8 +90,6 @@ int main()
 	}
 	printf("\n%d frames recorded\n", i);
 
-error_signal:
-	printf("error signal\n");
 error_output:
 	printf("error output\n");
 error_encoder:
