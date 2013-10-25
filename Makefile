@@ -1,6 +1,6 @@
 SOURCE=$(wildcard *.c)
 OBJS=$(patsubst %.c,%.o,$(SOURCE))
-CC=arm-linux-gnueabi-gcc
+CC=arm-linux-gnueabi-gcc -g
 CPP=arm-linux-gnueabi-g++
 CFLAGS  =
 LIBS	=

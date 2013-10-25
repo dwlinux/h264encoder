@@ -57,9 +57,16 @@ int main()
 	memcpy(header_pic.buffer,encoded_pic.buffer,encoded_pic.length);
 	if(!output_write_headers(&header_pic))
 		goto error_output;
+
+	// not sure about this -- but g_outputDataInfo.uSize0 appears to
+	// contain a whole frame at this point, so write it out and start
+	// at frame 1 in the loop
+	if(!output_write_frame(&encoded_pic))
+		goto error_encoder;
+	
 	encoder_release(&encoded_pic);
 
-	for(i=0 ;; i++){
+	for(i=1 ;; i++){
 		int width = 0, height = 0;
 		sprintf(filename, "frame.%d", i);
 		fp = fopen(filename, "r");
