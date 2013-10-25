@@ -82,8 +82,8 @@ int encoder_init(struct picture_t *info)
 	enc_fmt.qp_min = 20;
 	enc_fmt.avg_bit_rate = 1024*1024;
 	enc_fmt.maxKeyInterval = 8;
-	
-    //enc_fmt.profileIdc = 77; /* main profile */
+
+	// enc_fmt.profileIdc = 77; /* main profile */
 
 	enc_fmt.profileIdc = 66; /* baseline profile */
 	enc_fmt.levelIdc = 31;
