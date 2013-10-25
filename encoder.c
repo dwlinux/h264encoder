@@ -134,7 +134,7 @@ static int do_encode()
 	if(ret != 0)
 		return 0;
 
-	// fprintf(stderr, " debug: priLen=%d, data0Len=%d, data1Len=%d\n", 
+	// fprintf(stderr, " debug: privateDataLen=%d, uSize0=%d, uSize1=%d\n", 
 	// 	g_outputDataInfo.privateDataLen,
 	// 	g_outputDataInfo.uSize0,
 	// 	g_outputDataInfo.uSize1);
