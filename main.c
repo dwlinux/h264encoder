@@ -19,8 +19,7 @@ int main()
 	memset(&pic, 0, sizeof(pic));
 
 	// read input data from files named frame.0, frame.1, frame.2, ...
-	sprintf(filename, "frame.%d", 0);
-	fp = fopen(filename, "r");
+	fp = fopen("frame.0", "r");
 	if (!fp)
 		goto error_input;
 
@@ -36,6 +35,8 @@ int main()
 		fclose(fp);
 		goto error_input;
 	}
+	printf("width: %d, height: %d\n", pic.width, pic.height);
+
 	pic.buffer = malloc(pic.width * pic.height / 4 * 6);
 	if (!pic.buffer) {
 		fclose(fp);
@@ -47,7 +48,6 @@ int main()
 		fprintf(stderr,"failed to initialize encoder\n");
 		goto error_encoder;
 	}
-	printf("file:%s\n",mkv_filename);
 	if(!output_init(&pic,mkv_filename))
 		goto error_output;
 	if(!encoder_encode_headers(&encoded_pic))
@@ -58,6 +58,7 @@ int main()
 	if(!output_write_headers(&header_pic))
 		goto error_output;
 	encoder_release(&encoded_pic);
+
 	for(i=0 ;; i++){
 		int width = 0, height = 0;
 		sprintf(filename, "frame.%d", i);
@@ -94,7 +95,7 @@ error_encoder:
 	printf("error encoder\n");
 	goto no_error;
 no_error:
-	printf("\n%d frames recorded\n", i);
+	printf("%d frames recorded\n", i);
 	if (pic.buffer)
 		free(pic.buffer);
 	return 0;
