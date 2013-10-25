@@ -60,10 +60,10 @@ int main()
 	encoder_release(&encoded_pic);
 	for(i=0 ;; i++){
 		int width = 0, height = 0;
-		sprintf(filename, "frame.%d", 0);
+		sprintf(filename, "frame.%d", i);
 		fp = fopen(filename, "r");
 		if (!fp)
-			goto error_input;
+			goto no_error;
 		fread(&width, sizeof(int), 1, fp);
 		fread(&height, sizeof(int), 1, fp);
 		if (width != pic.width || height != pic.height) {
@@ -77,19 +77,25 @@ int main()
 		pic.timestamp.tv_sec = i / 25;
 		pic.timestamp.tv_usec = i * 40000;	// 25 FPS
 		if(!encoder_encode_frame(&pic, &encoded_pic))
-			break;
-		free(pic.buffer);
+			goto error_encoder;
 		if(!output_write_frame(&encoded_pic))
-			break;
+			goto error_encoder;
 		encoder_release(&encoded_pic);
 	}
-	printf("\n%d frames recorded\n", i);
 
 error_input:
 	printf("error input\n");
+	goto no_error;
 error_output:
 	printf("error output\n");
+	goto no_error;
 error_encoder:
-	free(pic.buffer);
+	encoder_release(&encoded_pic);
+	printf("error encoder\n");
+	goto no_error;
+no_error:
+	printf("\n%d frames recorded\n", i);
+	if (pic.buffer)
+		free(pic.buffer);
 	return 0;
 }
