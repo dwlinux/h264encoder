@@ -74,7 +74,8 @@ int main()
 		fread(pic.buffer, 1, pic.width * pic.height / 4 * 6, fp);
 		fclose(fp);
 		
-		gettimeofday(&pic.timestamp, NULL);
+		pic.timestamp.tv_sec = i / 25;
+		pic.timestamp.tv_usec = i * 40000;	// 25 FPS
 		if(!encoder_encode_frame(&pic, &encoded_pic))
 			break;
 		free(pic.buffer);
