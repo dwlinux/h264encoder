@@ -23,7 +23,7 @@ static uint8_t *findDelimiter(uint8_t **_p, uint8_t *end)
 {
 	int cnt_0 = 0;
 	uint8_t *ret = 0, *p = *_p;
-	//printf("P %x,end %x \n",*p,end);
+	// printf("P %x,end %p \n",*p,end);
 	while(p < end){
 		if(!*p){
 			if(!ret)
@@ -75,12 +75,12 @@ int output_write_headers(struct encoded_pic_t *headers)
 	int avcC_len;
 
 	uint8_t *tmp, *last = NULL;
-	uint8_t *sps, *pps, *sei;
+	uint8_t *sps = NULL, *pps = NULL, *sei = NULL;
 	int sps_len=0, pps_len=0, sei_len=0;
 
 	int ret;
-	//printf("header_pic_length %d\n",(int)(headers->length));
-	//printf("header_pic_buffer @%x\n",(int)(headers->buffer));
+	// printf("header_pic_length %d\n",(int)(headers->length));
+	// printf("header_pic_buffer @%x\n",(int)(headers->buffer));
 	uint64_t frame_duration = 1000000000ull/FPS;
 	//printf("tmp @%x\n",(int)(tmp));
 	for(tmp = headers->buffer;;){
@@ -108,9 +108,15 @@ int output_write_headers(struct encoded_pic_t *headers)
 		if(!st)
 			break;
 	}
-	 //printf("sps @%x,%d,%x\n",(int)(sps),sps_len,(int)(*sps));
-	 //printf("pps @%x,%d,%x\n",(int)(pps),pps_len,(int)(*pps));
-	 //printf("sei @%x,%d,%x\n",(int)(sei),sei_len,(int)(*(sei)));
+
+#if 0
+	if (sps_len)
+		printf("sps @%x,%d,%x\n",(int)(sps),sps_len,(int)(*sps));
+	if (pps_len)
+		printf("pps @%x,%d,%x\n",(int)(pps),pps_len,(int)(*pps));
+	if (sei_len)
+		printf("sei @%x,%d,%x\n",(int)(sei),sei_len,(int)(*(sei)));
+#endif
 
 	avcC_len = 5 + 1 + 2 + sps_len + 1 + 2 + pps_len;
 	avcC = malloc( avcC_len );
