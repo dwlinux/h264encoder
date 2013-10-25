@@ -42,6 +42,7 @@ int main()
 		fclose(fp);
 		goto error_input;
 	}
+	fread(pic.buffer, 1, pic.width * pic.height / 4 * 6, fp);
 	fclose(fp);
 
 	if(!encoder_init(&pic)){
