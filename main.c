@@ -64,7 +64,7 @@ int main()
 	// at frame 1 in the loop
 	if(!output_write_frame(&encoded_pic))
 		goto error_encoder;
-	
+
 	encoder_release(&encoded_pic);
 
 	for(i=1 ;; i++){
@@ -82,9 +82,9 @@ int main()
 
 		fread(pic.buffer, 1, pic.width * pic.height / 4 * 6, fp);
 		fclose(fp);
-		
+
 		pic.timestamp.tv_sec = i / 25;
-		pic.timestamp.tv_usec = i * 40000;	// 25 FPS
+		pic.timestamp.tv_usec = (i * 40000) % 1000000;	// 25 FPS
 		if(!encoder_encode_frame(&pic, &encoded_pic))
 			goto error_encoder;
 		if(!output_write_frame(&encoded_pic))
