@@ -1,3 +1,9 @@
+#ifndef __simplerecorder__
+#define __simplerecorder__
+#include "picture_t.h"
+
+int input_init(struct picture_t *pic);
+int input_getframe(int frame, struct picture_t *pic);
 
 int output_init(struct picture_t *info, const char *str);
 int output_write_headers(struct encoded_pic_t *headers);
@@ -10,3 +16,4 @@ int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output
 void encoder_release(struct encoded_pic_t *output);
 void encoder_close();
 void ResetTime(struct picture_t *raw_pic,struct encoded_pic_t *output);
+#endif // __simplerecorder__

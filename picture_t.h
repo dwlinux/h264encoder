@@ -1,3 +1,7 @@
+#ifndef __picture_t__
+#define __picture_t__
+
+#include <sys/time.h>
 struct picture_t {
 	unsigned char *buffer;
 	struct timeval timestamp;
@@ -13,3 +17,4 @@ struct encoded_pic_t{
 	enum H264_FRAME_TYPE frame_type;
 	void * usr_def;
 };
+#endif // __picture_t__

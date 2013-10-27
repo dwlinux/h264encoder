@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/time.h>
 #include "picture_t.h"
 #include "simplerecorder.h"
 
@@ -13,37 +12,19 @@ int main()
 {
 	int i;
 	struct encoded_pic_t encoded_pic,header_pic;
-	char filename[128];
-	FILE *fp;
 
 	memset(&pic, 0, sizeof(pic));
 
-	// read input data from files named frame.0, frame.1, frame.2, ...
-	fp = fopen("frame.0", "r");
-	if (!fp)
+	if (!input_init(&pic))
 		goto error_input;
 
-	// input file format:
-	//    width:4
-	//    height:4
-	//    data:width*height/4*6
-	//        YUV420p image format
-	// note: width should probably be a multiple of 4 for now
-	fread(&pic.width, sizeof(int), 1, fp);
-	fread(&pic.height, sizeof(int), 1, fp);
-	if (!pic.width || !pic.height) {
-		fclose(fp);
-		goto error_input;
-	}
-	printf("width: %d, height: %d\n", pic.width, pic.height);
+	fprintf(stderr, "width: %d, height: %d\n", pic.width, pic.height);
 
 	pic.buffer = malloc(pic.width * pic.height / 4 * 6);
-	if (!pic.buffer) {
-		fclose(fp);
+	if (!pic.buffer)
 		goto error_input;
-	}
-	fread(pic.buffer, 1, pic.width * pic.height / 4 * 6, fp);
-	fclose(fp);
+
+	input_getframe(0, &pic);
 
 	if(!encoder_init(&pic)){
 		fprintf(stderr,"failed to initialize encoder\n");
@@ -68,21 +49,8 @@ int main()
 	encoder_release(&encoded_pic);
 
 	for(i=1 ;; i++){
-		int width = 0, height = 0;
-		sprintf(filename, "frame.%d", i);
-		fp = fopen(filename, "r");
-		if (!fp)
+		if (!input_getframe(i, &pic))
 			goto no_error;
-		fread(&width, sizeof(int), 1, fp);
-		fread(&height, sizeof(int), 1, fp);
-		if (width != pic.width || height != pic.height) {
-			fclose(fp);
-			goto error_input;
-		}
-
-		fread(pic.buffer, 1, pic.width * pic.height / 4 * 6, fp);
-		fclose(fp);
-
 		pic.timestamp.tv_sec = i / 25;
 		pic.timestamp.tv_usec = (i * 40000) % 1000000;	// 25 FPS
 		if(!encoder_encode_frame(&pic, &encoded_pic))
@@ -93,17 +61,17 @@ int main()
 	}
 
 error_input:
-	printf("error input\n");
+	fprintf(stderr, "error input\n");
 	goto no_error;
 error_output:
-	printf("error output\n");
+	fprintf(stderr, "error output\n");
 	goto no_error;
 error_encoder:
 	encoder_release(&encoded_pic);
-	printf("error encoder\n");
+	fprintf(stderr, "error encoder\n");
 	goto no_error;
 no_error:
-	printf("%d frames recorded\n", i);
+	fprintf(stderr, "%d frames recorded\n", i);
 	if (pic.buffer)
 		free(pic.buffer);
 	return 0;
