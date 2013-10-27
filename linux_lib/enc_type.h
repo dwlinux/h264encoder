@@ -8,6 +8,7 @@ extern int cedarx_hardware_init(int mode);
 extern int cedarx_hardware_exit(int mode);
 extern void *cedar_sys_phymalloc_map(unsigned int size, int align);
 extern void cedar_sys_phyfree_map(void *buf);
+extern void cedarv_set_ve_freq(int freq);
 extern unsigned int cedarv_address_vir2phy(void *addr);
 extern long long avs_counter_get_time_ms();
 extern int cedarv_wait_ve_ready();
