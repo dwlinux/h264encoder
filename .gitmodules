@@ -1,0 +1,3 @@
+[submodule "cedrus"]
+	path = cedrus
+	url = git://github.com/patrickhwood/cedrus
