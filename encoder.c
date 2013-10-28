@@ -107,16 +107,16 @@ int encoder_init(struct picture_t *info)
 
 	g_pCedarV = pCedarV;
 
-	virAddr = cedar_sys_phymalloc_map(Ysize+Csize, 1024);
+	virAddr = info->buffer;
 	if(!virAddr){
-		fprintf(stderr, "cedar_sys_phymalloc_map failed\n");
+		fprintf(stderr, "info->buffer not allocated failed\n");
 		return 0;
 	}
 	ve_flush_cache(virAddr, Ysize+Csize);
 
-	phyAddrY = cedarv_address_vir2phy(virAddr);
+	phyAddrY = ve_virt2phys(virAddr);
 	if(!phyAddrY){
-		fprintf(stderr, "cedarv_address_vir2phy failed\n");
+		fprintf(stderr, "ve_virt2phys failed\n");
 		return 0;
 	}
 	phyAddrY |= 0x40000000;
@@ -160,23 +160,10 @@ int encoder_encode_headers(struct encoded_pic_t *headers_out)
 	headers_out->buffer = g_outputDataInfo.privateData;
 	return 1;
 }
-static void I420toNV12(unsigned char *pNV12, const unsigned char *pI420, int C_Size)
-{
-	int halfC = C_Size/2;
-	const unsigned char *pCb = pI420;
-	const unsigned char *pCr = pI420 + halfC;
-	int j;
-	for(j=0; j<halfC; j++){
-		*pNV12++ = *pCb++;
-		*pNV12++ = *pCr++;
-	}
-}
 int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output)
 {
 	int64_t pts = raw_pic->timestamp.tv_usec + ((int64_t)raw_pic->timestamp.tv_sec) * 1000000;
 
-	memcpy(virAddr, raw_pic->buffer, Ysize);
-	I420toNV12(virAddr+Ysize, raw_pic->buffer+Ysize, Csize);
 	if(start_timestamp == -1) 
 		start_timestamp = pts;
 	cur_pts = pts - start_timestamp;
@@ -205,7 +192,6 @@ void encoder_close()
 {
 	if (virAddr)
 	{
-		cedar_sys_phyfree_map(virAddr);
 		virAddr = NULL;
 	}
 	if (g_pCedarV)

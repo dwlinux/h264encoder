@@ -79,7 +79,6 @@ struct frame_t
 {
 	void *luma_buffer;
 	void *chroma_buffer;
-	void *reorder_buffer;
 	uint16_t width, height;
 	int color;
 
@@ -104,13 +103,15 @@ void frame_copy(struct frame_t *frame, struct picture_t *pic)
 
 	pic->width = width;
 	pic->height = height;
-	pic->buffer = (unsigned char *) frame->reorder_buffer;
+
+	if (!pic->buffer)
+		pic->buffer = (unsigned char *) ve_malloc(width * height * 3 / 2);
 
 	ve_flush_cache(frame->luma_buffer, width * height);
 	ve_flush_cache(frame->chroma_buffer, width * height / 2);
 
 	// reorder Y data from decoder
-	byte32 *tmp = (byte32 *) frame->reorder_buffer;
+	byte32 *tmp = (byte32 *) pic->buffer;
 	int x, y;
 
 	for (y = 0; y < height; y++) {
@@ -121,13 +122,11 @@ void frame_copy(struct frame_t *frame, struct picture_t *pic)
 	}
 
 	// reorder UV data from decoder
-	unsigned char *tmpU = ((unsigned char *) frame->reorder_buffer) + width * height;
-	unsigned char *tmpV = tmpU + width * height / 4;
+	tmp = (byte32 *) ((unsigned char *) pic->buffer + width * height);
 	for (y = 0; y < height/2; y++) {
 		int yoffset = ((y % 32) * 32) + ((y / 32) * ((width / 32) * 1024));
-		for (x = 0; x < width; x += 2) {
-			*tmpU++ = *((unsigned char *)(frame->chroma_buffer + (x / 32) * 1024 + ((x % 32)) + yoffset));
-			*tmpV++ = *((unsigned char *)(frame->chroma_buffer + (x / 32) * 1024 + ((x % 32) + 1) + yoffset));
+		for (x = 0; x < width / 32; x++) {
+			*tmp++ = *((byte32 *)(frame->chroma_buffer + x * 1024 + yoffset));
 		}
 	}
 }
@@ -139,7 +138,6 @@ struct frame_t *frame_new(uint16_t width, uint16_t height, int color)
 	struct frame_t *frame = malloc(sizeof(struct frame_t));
 	frame->luma_buffer = ve_malloc(size);
 	frame->chroma_buffer = ve_malloc(size);
-	frame->reorder_buffer = malloc(size * 3 / 2);
 
 	frame->width = width;
 	frame->height = height;
@@ -171,7 +169,6 @@ void frame_unref(struct frame_t *frame)
 	{
 		ve_free(frame->luma_buffer);
 		ve_free(frame->chroma_buffer);
-		free(frame->reorder_buffer);
 		free(frame);
 	}
 }
@@ -350,7 +347,6 @@ int main(int argc, char** argv)
 	struct frame_t *frames[RING_BUFFER_SIZE];
 	memset(frames, 0, sizeof(frames));
 
-
 	while (av_read_frame(avfmt_ctx, &pkt) >= 0)
 	{
 		mpeg.data = pkt.data;
@@ -477,6 +473,8 @@ no_error:
 	ve_close();
 
 	avformat_close_input(&avfmt_ctx);
+	if (pic.buffer)
+		ve_free(pic.buffer);
 
 	return 0;
 }
