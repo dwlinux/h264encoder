@@ -8,7 +8,10 @@ CFLAGS  = -Icedrus -Icedrus/mpeg-test
 LIBS	= $(shell pkg-config --libs libavformat libavcodec libavutil)
 OBJS += cedrus/common/*.o cedrus/mpeg-test/mpeg.o
 
-all: simplerecorder
+all: cedrus/mpeg-test/mpeg-test simplerecorder
+
+cedrus/mpeg-test/mpeg-test:
+	cd cedrus/mpeg-test; $(MAKE)
 
 simplerecorder: $(OBJS)
 	$(CPP) -Wall -o $@ $^ -pthread -L. -lm -lrt $(LIBS) ./linux_lib/libcedarv_osal.a ./linux_lib/libcedarxalloc.a ./linux_lib/libh264enc.a
