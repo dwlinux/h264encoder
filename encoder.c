@@ -9,6 +9,7 @@
 #include <time.h>
 #include "picture_t.h"
 #include "simplerecorder.h"
+#include "common/ve.h"
 
 #include "linux_lib/type.h"
 #include "linux_lib/H264encLibApi.h"
@@ -32,6 +33,8 @@ static int32_t internal_WaitFinishCB(int32_t uParam1, void *pMsg)
 static int32_t internal_GetFrmBufCB(int32_t uParam1,  void *pFrmBufInfo)
 {
 	VEnc_FrmBuf_Info encBuf;
+
+	ve_flush_cache(virAddr, Ysize+Csize);
 
 	memset((void*)&encBuf, 0, sizeof(VEnc_FrmBuf_Info));
 	
@@ -80,7 +83,7 @@ int encoder_init(struct picture_t *info)
 	enc_fmt.color_space = BT601;
 	enc_fmt.qp_max = 40;
 	enc_fmt.qp_min = 20;
-	enc_fmt.avg_bit_rate = 1024*1024;
+	enc_fmt.avg_bit_rate = 1024*1024*4;
 	enc_fmt.maxKeyInterval = 8;
 
 	// enc_fmt.profileIdc = 77; /* main profile */
@@ -109,6 +112,7 @@ int encoder_init(struct picture_t *info)
 		fprintf(stderr, "cedar_sys_phymalloc_map failed\n");
 		return 0;
 	}
+	ve_flush_cache(virAddr, Ysize+Csize);
 
 	phyAddrY = cedarv_address_vir2phy(virAddr);
 	if(!phyAddrY){
@@ -124,10 +128,12 @@ static int do_encode()
 {
 	int ret;
 
+	ve_flush_cache(virAddr, Ysize+Csize);
 	g_pCedarV->IoCtrl(g_pCedarV, VENC_LIB_CMD_SET_MD_PARA , 0);
 	ret = g_pCedarV->encode(g_pCedarV);
 	if(ret != 0)
 		return 0;
+	ve_flush_cache(virAddr, Ysize+Csize);
 
 	memset(&g_outputDataInfo, 0 , sizeof(__vbv_data_ctrl_info_t));
 	ret = g_pCedarV->GetBitStreamInfo(g_pCedarV, &g_outputDataInfo);
