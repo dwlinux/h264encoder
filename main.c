@@ -105,10 +105,7 @@ void frame_copy(struct frame_t *frame, struct picture_t *pic)
 	pic->height = height;
 
 	if (!pic->buffer)
-		pic->buffer = (unsigned char *) ve_malloc(width * height * 3 / 2);
-
-	ve_flush_cache(frame->luma_buffer, width * height);
-	ve_flush_cache(frame->chroma_buffer, width * height / 2);
+		pic->buffer = (unsigned char *) ve_malloc((width * height * 3 / 2 + 65535) & ~65535);
 
 	// reorder Y data from decoder
 	byte32 *tmp = (byte32 *) pic->buffer;
@@ -129,15 +126,50 @@ void frame_copy(struct frame_t *frame, struct picture_t *pic)
 			*tmp++ = *((byte32 *)(frame->chroma_buffer + x * 1024 + yoffset));
 		}
 	}
+	ve_flush_cache(pic->buffer, width * height * 3 / 2);
 }
+
+#ifdef SHOW
+int frame_show(struct frame_t *frame)
+{
+	static int disp_initialized = 0;
+	static int frame_id = 0;
+
+	int width = (frame->width + 31) & ~31;
+	int height = frame->height;
+
+	if (!disp_initialized)
+	{
+		if (!disp_open())
+		{
+			fprintf(stderr, "Can't open /dev/disp\n");
+			return 0;
+		}
+
+		disp_set_para(ve_virt2phys(frame->luma_buffer), ve_virt2phys(frame->chroma_buffer),
+			frame->color, frame->width, frame->height,
+			0, 0, 1920, 1080);
+
+		disp_initialized = 1;
+	}
+
+	disp_new_frame(ve_virt2phys(frame->luma_buffer), ve_virt2phys(frame->chroma_buffer),
+		frame_id++, 24000);
+	// if (getchar() == 'q') {
+	// 	disp_close();
+	// 	return 0;
+	// }
+	return 1;
+}
+#endif
 
 struct frame_t *frame_new(uint16_t width, uint16_t height, int color)
 {
 	int size = ((width + 31) & ~31) * ((height + 31) & ~31);
 
 	struct frame_t *frame = malloc(sizeof(struct frame_t));
-	frame->luma_buffer = ve_malloc(size);
-	frame->chroma_buffer = ve_malloc(size);
+	frame->luma_buffer = ve_malloc((size + 65535) & ~65535);
+	frame->chroma_buffer = ve_malloc((size / 2 + 65535) & ~65535);
 
 	frame->width = width;
 	frame->height = height;
@@ -179,7 +211,7 @@ void decode_mpeg(struct frame_buffers_t *frame_buffers, const struct mpeg_t * co
 	uint8_t *input_buffer = ve_malloc(input_size);
 	memcpy(input_buffer, mpeg->data, mpeg->len);
 
-	ve_flush_cache(input_buffer, mpeg->len);
+	ve_flush_cache(input_buffer, input_size);
 
 	// activate MPEG engine
 	writel(ve_get_regs() + 0x00, 0x00130000);
@@ -234,6 +266,7 @@ void decode_mpeg(struct frame_buffers_t *frame_buffers, const struct mpeg_t * co
 		frame_unref(frame_buffers->backward);
 		frame_buffers->backward = frame_ref(frame_buffers->output);
 	}
+
 	writel(ve_regs + 0x100 + 0x50, ve_virt2phys(frame_buffers->forward->luma_buffer));
 	writel(ve_regs + 0x100 + 0x54, ve_virt2phys(frame_buffers->forward->chroma_buffer));
 	writel(ve_regs + 0x100 + 0x58, ve_virt2phys(frame_buffers->backward->luma_buffer));
@@ -270,8 +303,6 @@ void decode_mpeg(struct frame_buffers_t *frame_buffers, const struct mpeg_t * co
 
 	// stop MPEG engine
 	writel(ve_get_regs() + 0x0, 0x00130007);
-
-	ve_flush_cache(input_buffer, mpeg->len);
 }
 
 #define RING_BUFFER_SIZE (8)
@@ -383,9 +414,13 @@ int main(int argc, char** argv)
 			}
 			frames[(gop_offset + mpeg.temporal_reference) % RING_BUFFER_SIZE] = frame_buffers.output;
 
-			// if we decoded a displayable frame, show it
+			// if we decoded a frame, encode it
 			if (frames[disp_frame % RING_BUFFER_SIZE] != NULL)
 			{
+#ifdef SHOW
+				if (!frame_show(frames[disp_frame % RING_BUFFER_SIZE]))
+					goto no_error;
+#endif
 				frame_copy(frames[disp_frame % RING_BUFFER_SIZE], &pic);
 				if (firsttime) {
 					firsttime = 0;
@@ -458,10 +493,10 @@ error_output:
 	goto no_error;
 error_encoder:
 	encoder_release(&encoded_pic);
-	encoder_close();
 	fprintf(stderr, "error encoder\n");
 	goto no_error;
 no_error:
+	encoder_close();
 	fprintf(stderr, "%d frames recorded\n", disp_frame);
 
 	frame_unref(frames[(disp_frame - 2) % RING_BUFFER_SIZE]);
