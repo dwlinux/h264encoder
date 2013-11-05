@@ -13,10 +13,13 @@ all: cedrus/mpeg-test/mpeg-test simplerecorder
 cedrus/mpeg-test/mpeg-test:
 	cd cedrus/mpeg-test; $(MAKE)
 
+cedrus/common/*.o:
+	cd cedrus/mpeg-test; $(MAKE)
+
 simplerecorder: $(OBJS)
 	$(CPP) -Wall -o $@ $^ -pthread -L. -lm -lrt $(LIBS) ./linux_lib/libcedarv_osal.a ./linux_lib/libcedarxalloc.a ./linux_lib/libh264enc.a
 %.o: %.c
 	$(CC) -Wall -c $< -o $@ $(CFLAGS)
 
 clean:
-	rm $(OBJS) simplerecorder
+	rm -f $(OBJS) simplerecorder
