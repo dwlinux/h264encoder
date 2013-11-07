@@ -14,8 +14,6 @@
 #include "linux_lib/H264encLibApi.h"
 #include "linux_lib/enc_type.h"
 
-#define DEFAULT_FPS 25
-
 static VENC_DEVICE *g_pCedarV;
 static __vbv_data_ctrl_info_t g_outputDataInfo;
 static int64_t start_timestamp;
@@ -156,14 +154,21 @@ int encoder_encode_headers(struct encoded_pic_t *headers_out)
 }
 static void I420toNV12(unsigned char *pNV12, const unsigned char *pI420, int C_Size)
 {
+	unsigned char *tmpNV12 = malloc(C_Size);
+	unsigned char *save_tmpNV12 = tmpNV12;
 	int halfC = C_Size/2;
 	const unsigned char *pCb = pI420;
 	const unsigned char *pCr = pI420 + halfC;
 	int j;
+
+	if (!tmpNV12)
+		return;
 	for(j=0; j<halfC; j++){
-		*pNV12++ = *pCb++;
-		*pNV12++ = *pCr++;
+		*tmpNV12++ = *pCb++;
+		*tmpNV12++ = *pCr++;
 	}
+	memcpy(pNV12, save_tmpNV12, C_Size);
+	free(save_tmpNV12);
 }
 int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output)
 {
