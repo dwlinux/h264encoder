@@ -152,30 +152,11 @@ int encoder_encode_headers(struct encoded_pic_t *headers_out)
 	headers_out->buffer = g_outputDataInfo.privateData;
 	return 1;
 }
-static void I420toNV12(unsigned char *pNV12, const unsigned char *pI420, int C_Size)
-{
-	unsigned char *tmpNV12 = malloc(C_Size);
-	unsigned char *save_tmpNV12 = tmpNV12;
-	int halfC = C_Size/2;
-	const unsigned char *pCb = pI420;
-	const unsigned char *pCr = pI420 + halfC;
-	int j;
-
-	if (!tmpNV12)
-		return;
-	for(j=0; j<halfC; j++){
-		*tmpNV12++ = *pCb++;
-		*tmpNV12++ = *pCr++;
-	}
-	memcpy(pNV12, save_tmpNV12, C_Size);
-	free(save_tmpNV12);
-}
 int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output)
 {
 	int64_t pts = raw_pic->timestamp.tv_usec + ((int64_t)raw_pic->timestamp.tv_sec) * 1000000;
 
-	memcpy(virAddr, raw_pic->buffer, Ysize);
-	I420toNV12(virAddr+Ysize, raw_pic->buffer+Ysize, Csize);
+	memcpy(virAddr, raw_pic->buffer, Ysize + Csize);
 	if(start_timestamp == -1) 
 		start_timestamp = pts;
 	cur_pts = pts - start_timestamp;
