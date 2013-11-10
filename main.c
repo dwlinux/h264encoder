@@ -8,14 +8,27 @@
 #define mkv_filename "output.mkv"
 static struct picture_t pic;
 
-int main()
+int main(int argc, char **argv)
 {
 	int i;
 	struct encoded_pic_t encoded_pic,header_pic;
+	void *input_state;
+
+	if (argc != 3) {
+		fprintf(stderr, "usage: %s width height\n", argv[0]);
+		return 1;
+	}
 
 	memset(&pic, 0, sizeof(pic));
 
-	if (!input_init(&pic))
+	pic.width = atoi(argv[1]);
+	pic.height = atoi(argv[2]);
+	if (!pic.width || !pic.height) {
+		fprintf(stderr, "usage: %s width height\n", argv[0]);
+		return 2;
+	}
+
+	if (!(input_state = input_init(&pic)))
 		goto error_input;
 
 	fprintf(stderr, "width: %d, height: %d\n", pic.width, pic.height);
@@ -24,7 +37,7 @@ int main()
 	if (!pic.buffer)
 		goto error_input;
 
-	input_getframe(0, &pic);
+	input_getframe(input_state, &pic);
 
 	if(!encoder_init(&pic)){
 		fprintf(stderr,"failed to initialize encoder\n");
@@ -49,7 +62,7 @@ int main()
 	encoder_release(&encoded_pic);
 
 	for(i=1 ;; i++){
-		if (!input_getframe(i, &pic))
+		if (!input_getframe(input_state, &pic))
 			goto no_error;
 		pic.timestamp.tv_sec = i / 25;
 		pic.timestamp.tv_usec = (i * 40000) % 1000000;	// 25 FPS
