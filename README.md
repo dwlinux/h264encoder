@@ -7,7 +7,8 @@ h264encoder
 * main.c:        overall encoder control
 
 Sample usage:
-avconv -i <input_video_file> -vf pad="trunc((iw+31)/32)*32" \
-	-pix_fmt nv12 -f rawvideo pipe: |
-	simplerecorder <width> <height>
+
+    avconv -i <input_video_file> -vf pad="trunc((iw+31)/32)*32" \
+        -pix_fmt nv12 -f rawvideo pipe: |
+        simplerecorder <width> <height>
 ---
