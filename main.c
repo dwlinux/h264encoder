@@ -8,14 +8,20 @@
 #define mkv_filename "output.mkv"
 static struct picture_t pic;
 
+static void usage(char *name)
+{
+	fprintf(stderr, "usage: %s width height [rawvideo.file]\n", name);
+}
+
 int main(int argc, char **argv)
 {
 	int i;
+	char *rawname = NULL;
 	struct encoded_pic_t encoded_pic,header_pic;
 	void *input_state;
 
-	if (argc != 3) {
-		fprintf(stderr, "usage: %s width height\n", argv[0]);
+	if (argc != 3 && argc != 4) {
+		usage(argv[0]);
 		return 1;
 	}
 
@@ -24,13 +30,16 @@ int main(int argc, char **argv)
 	pic.width = atoi(argv[1]);
 	pic.height = atoi(argv[2]);
 	if (!pic.width || !pic.height) {
-		fprintf(stderr, "usage: %s width height\n", argv[0]);
+		usage(argv[0]);
 		return 2;
 	}
+	if (argc == 4)
+		rawname = argv[3];
 
-	if (!(input_state = input_init(&pic)))
+	if (!(input_state = input_init(rawname, &pic)))
 		goto error_input;
 
+	fprintf(stderr, "rawvideo: %s\n", rawname);
 	fprintf(stderr, "width: %d, height: %d\n", pic.width, pic.height);
 
 	pic.buffer = malloc(pic.width * pic.height / 4 * 6);

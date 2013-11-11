@@ -2,7 +2,7 @@
 #define __simplerecorder__
 #include "picture_t.h"
 
-void *input_init(struct picture_t *pic);
+void *input_init(char *filename, struct picture_t *pic);
 int input_getframe(void *state, struct picture_t *pic);
 
 int output_init(struct picture_t *info, const char *str);
