@@ -116,6 +116,8 @@ int encoder_init(struct picture_t *info)
 	phyAddrY |= 0x40000000;
 	phyAddrCb = phyAddrY + Ysize;
 
+	info->buffer = virAddr;
+
 	return 1;
 }
 static int do_encode()
@@ -156,7 +158,6 @@ int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output
 {
 	int64_t pts = raw_pic->timestamp.tv_usec + ((int64_t)raw_pic->timestamp.tv_sec) * 1000000;
 
-	memcpy(virAddr, raw_pic->buffer, Ysize + Csize);
 	if(start_timestamp == -1) 
 		start_timestamp = pts;
 	cur_pts = pts - start_timestamp;

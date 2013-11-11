@@ -42,16 +42,15 @@ int main(int argc, char **argv)
 	fprintf(stderr, "rawvideo: %s\n", rawname);
 	fprintf(stderr, "width: %d, height: %d\n", pic.width, pic.height);
 
-	pic.buffer = malloc(pic.width * pic.height / 4 * 6);
-	if (!pic.buffer)
-		goto error_input;
-
-	input_getframe(input_state, &pic);
-
 	if(!encoder_init(&pic)){
 		fprintf(stderr,"failed to initialize encoder\n");
 		goto error_encoder;
 	}
+
+	if (!pic.buffer)
+		goto error_input;
+	input_getframe(input_state, &pic);
+
 	if(!output_init(&pic,mkv_filename))
 		goto error_output;
 	if(!encoder_encode_headers(&encoded_pic))
@@ -94,7 +93,5 @@ error_encoder:
 	goto no_error;
 no_error:
 	fprintf(stderr, "%d frames recorded\n", i);
-	if (pic.buffer)
-		free(pic.buffer);
 	return 0;
 }
