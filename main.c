@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	if (argc == 4)
 		rawname = argv[3];
 
-	if (!(input_state = input_init(rawname, &pic)))
+	if (0 > (input_state = input_init(rawname, &pic)))
 		goto error_input;
 
 	fprintf(stderr, "rawvideo: %s\n", rawname);
