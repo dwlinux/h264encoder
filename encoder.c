@@ -13,6 +13,7 @@
 #include "linux_lib/type.h"
 #include "linux_lib/H264encLibApi.h"
 #include "linux_lib/enc_type.h"
+#include "linux_lib/cedardev_api.h"
 
 static VENC_DEVICE *g_pCedarV;
 static __vbv_data_ctrl_info_t g_outputDataInfo;
@@ -124,6 +125,7 @@ static int do_encode()
 {
 	int ret;
 
+	cedarx_cache_op(virAddr, (char *) virAddr + Ysize+Csize, CEDARX_DCACHE_FLUSH);
 	g_pCedarV->IoCtrl(g_pCedarV, VENC_LIB_CMD_SET_MD_PARA , 0);
 	ret = g_pCedarV->encode(g_pCedarV);
 	if(ret != 0)
