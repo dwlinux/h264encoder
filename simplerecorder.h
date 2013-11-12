@@ -1,5 +1,13 @@
 #ifndef __simplerecorder__
 #define __simplerecorder__
+
+#ifdef TRACER
+#include <valgrind.h>
+#define TRACE(...) VALGRIND_PRINTF(__VA_ARGS__)
+#else
+#define TRACE(...)
+#endif
+
 #include "picture_t.h"
 
 void *input_init(char *filename, struct picture_t *pic);
