@@ -156,7 +156,7 @@ int encoder_encode_headers(struct encoded_pic_t *headers_out)
 	headers_out->buffer = g_outputDataInfo.privateData;
 	return 1;
 }
-int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output)
+int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output, struct encoded_pic_t *header)
 {
 	int64_t pts = raw_pic->timestamp.tv_usec + ((int64_t)raw_pic->timestamp.tv_sec) * 1000000;
 
@@ -165,6 +165,15 @@ int encoder_encode_frame(struct picture_t *raw_pic, struct encoded_pic_t *output
 	cur_pts = pts - start_timestamp;
 	if(!do_encode())
 		return 0;
+
+	if(g_outputDataInfo.privateDataLen > 0) {
+		header->buffer = g_outputDataInfo.privateData;
+		header->length = g_outputDataInfo.privateDataLen;
+	}
+	else {
+		header->buffer = NULL;
+		header->length = 0;
+	}
 
 	output->length = g_outputDataInfo.uSize0;
 	output->buffer = g_outputDataInfo.pData0;

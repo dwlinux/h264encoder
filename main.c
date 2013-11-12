@@ -98,35 +98,20 @@ int main(int argc, char **argv)
 	if(option_output_filename)
 		if(!output_init(&pic, option_output_filename))
 			goto error_output;
-	
-	if(!encoder_encode_headers(&encoded_pic))
-		goto error_output;
-	
-	if(option_output_filename) {
-		memcpy(&header_pic,&encoded_pic,sizeof(encoded_pic));
-		header_pic.buffer=malloc(encoded_pic.length);
-		memcpy(header_pic.buffer,encoded_pic.buffer,encoded_pic.length);
 
-		if(!output_write_headers(&header_pic))
-			goto error_output;
-
-		// not sure about this -- but g_outputDataInfo.uSize0 appears to
-		// contain a whole frame at this point, so write it out and start
-		// at frame 1 in the loop
-		if(!output_write_frame(&encoded_pic))
-			goto error_encoder;	
-	}
-	encoder_release(&encoded_pic);
-
-	for(i=1 ;; i++){
+	for(i=0 ;; i++){
 		if (!input_getframe(input_state, &pic))
 			goto no_error;
 		pic.timestamp.tv_sec = i / 25;
 		pic.timestamp.tv_usec = (i * 40000) % 1000000;	// 25 FPS
-		if(!encoder_encode_frame(&pic, &encoded_pic))
+		if(!encoder_encode_frame(&pic, &encoded_pic, &header_pic))
 			goto error_encoder;
 
 		if(option_output_filename) {
+			if(header_pic.length > 0) {
+				if(!output_write_headers(&header_pic))
+					goto error_output;
+			}
 			if(!output_write_frame(&encoded_pic))
 				goto error_encoder;
 		}
@@ -148,6 +133,6 @@ error_encoder:
 no_error:
 	if(option_output_filename)
 		output_close();
-	fprintf(stderr, "%d frames recorded\n", i);
+	fprintf(stderr, "%d frames recorded\n", i + 1);
 	return 0;
 }
