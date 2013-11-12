@@ -11,7 +11,7 @@ simpleencoder.static: $(OBJS)
 	$(CPP) -Wall -o $@ $^ -static $(LIBS)
 
 simpleencoder.dynamic: $(OBJS)
-	$(CPP) -Wall -o $@ $^ -static $(LIBS)
+	$(CPP) -Wall -o $@ $^ $(LIBS)
 
 %.o: %.c
 	$(CC) -Wall -c $< -o $@ $(CFLAGS)
