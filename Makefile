@@ -5,13 +5,16 @@ CPP=arm-linux-gnueabi-g++
 CFLAGS  =
 LIBS	= -pthread -L. -lm -lrt ./linux_lib/libcedarv_osal.a ./linux_lib/libcedarxalloc.a ./linux_lib/libh264enc.a
 
-all: simplerecorder
+all: simpleencoder.static simpleencoder.dynamic
 
-simplerecorder: $(OBJS)
-	$(CPP) -Wall -o $@ $^ $(LIBS)
+simpleencoder.static: $(OBJS)
+	$(CPP) -Wall -o $@ $^ -static $(LIBS)
+
+simpleencoder.dynamic: $(OBJS)
+	$(CPP) -Wall -o $@ $^ -static $(LIBS)
 
 %.o: %.c
 	$(CC) -Wall -c $< -o $@ $(CFLAGS)
 
 clean:
-	rm $(OBJS) simplerecorder
+	rm $(OBJS) simpleencoder.static simpleencoder.dynamic
