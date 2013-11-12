@@ -6,7 +6,6 @@
 #include "picture_t.h"
 #include "simplerecorder.h"
 
-#define mkv_filename "output.mkv"
 static struct picture_t pic;
 static char *option_input_filename  = NULL;
 static char *option_output_filename = NULL;
@@ -16,9 +15,9 @@ static int option_height	= 0;
 static void usage(char *name)
 {
 	fprintf(stderr, "usage: %s [options] [rawfile]\n", name);
-	fprintf(stderr, "\t-o,\t-output=filename\n");
-	fprintf(stderr, "\t-w,\t-width\n");
-	fprintf(stderr, "\t-h,\t-height\n");
+	fprintf(stderr, "\t-w width,    -width=width     (required)\n");
+	fprintf(stderr, "\t-h height,   -height=height   (required)\n");
+	fprintf(stderr, "\t-o filename, -output=filename\n");
 	fprintf(stderr, "\n");
 }
 
@@ -71,6 +70,11 @@ int main(int argc, char **argv)
 
 
 	memset(&pic, 0, sizeof(pic));
+
+	if (!option_width || !option_height) {
+		usage(argv[0]);
+		exit(1);
+	}
 
 	pic.width  = option_width;
 	pic.height = option_height;
@@ -140,7 +144,10 @@ error_encoder:
 	encoder_release(&encoded_pic);
 	fprintf(stderr, "error encoder\n");
 	goto no_error;
+
 no_error:
+	if(option_output_filename)
+		output_close();
 	fprintf(stderr, "%d frames recorded\n", i);
 	return 0;
 }
