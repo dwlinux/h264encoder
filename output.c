@@ -14,7 +14,7 @@
 #define OUTPUT_FILENAME "./Record/20170518/11:12:35.mkv"
 #define FPS 30
 static int width, height;
-mk_writer *writer;
+mk_writer *writer=NULL;
 static int cache_size=0;
 static uint8_t *cache=NULL;
 static int writing_frame = 0;
@@ -192,6 +192,8 @@ int output_write_frame(struct encoded_pic_t *encoded)
 }
 void output_close()
 {
-	mk_close(writer, 0);
-	//free(cache);
+	if (writer)
+		mk_close(writer, 0);
+	if (cache)
+		free(cache);
 }
