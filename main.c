@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <time.h>
 #include "picture_t.h"
 #include "simplerecorder.h"
 
@@ -82,6 +83,9 @@ int main(int argc, char **argv)
 	int i;
 	struct encoded_pic_t encoded_pic,header_pic;
 	void *input_state;
+	struct timespec tp_start;
+	struct timespec tp_end;
+	float encode_time;
 
 	parse_options(argc, argv);
 
@@ -114,6 +118,8 @@ int main(int argc, char **argv)
 	if(option_output_filename)
 		if(!output_init(&pic, option_output_filename))
 			goto error_output;
+
+	clock_gettime(CLOCK_MONOTONIC, &tp_start);
 
 	for(i=0 ;; i++){
 		if (!option_first_frame)
@@ -155,8 +161,12 @@ error_encoder:
 	goto no_error;
 
 no_error:
+	clock_gettime(CLOCK_MONOTONIC, &tp_end);
+	encode_time = (float)(tp_end.tv_sec - tp_start.tv_sec)
+		    + (float)(tp_end.tv_nsec - tp_start.tv_nsec) / (1000.0 * 1000 * 1000);
+
 	if(option_output_filename)
 		output_close();
-	fprintf(stderr, "%d frames recorded\n", i + 1);
+	fprintf(stderr, "%d frames recorded in %.2fs (%.5f efps) \n", i + 1, encode_time, (i + 1) / encode_time);
 	return 0;
 }
