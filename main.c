@@ -92,15 +92,16 @@ int main(int argc, char **argv)
 
 	memset(&pic, 0, sizeof(pic));
 
-	if (!option_width || !option_height) {
-		usage(argv[0]);
+	if (option_width && option_height) {
+		pic.width  = option_width;
+		pic.height = option_height;
 	}
-
-	pic.width  = option_width;
-	pic.height = option_height;
 
 	if (0 > (input_state = input_init(option_input_filename, &pic)))
 		goto error_input;
+
+	if (!pic.width || !pic.height)
+		usage(argv[0]);
 
 	fprintf(stderr, "rawvideo: %s\n", option_input_filename);
 	fprintf(stderr, "width: %d, height: %d\n", pic.width, pic.height);
