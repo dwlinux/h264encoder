@@ -12,6 +12,7 @@ static char *option_output_filename = NULL;
 static int option_width		= 0;
 static int option_height	= 0;
 static int option_nframes	= 0;
+static int option_first_frame	= 0;
 
 static void usage(char *name)
 {
@@ -21,6 +22,7 @@ static void usage(char *name)
 	fprintf(stderr, "\t-o,  --output=<filename>\n");
 	fprintf(stderr, "\t-s,  --size=<width>x<height>    (required)\n");
 	fprintf(stderr, "\t-n,  --nframes=<number>         encode only first <number> of frames");
+	fprintf(stderr, "\t-1,  --first-frame              repeat first frame");
 	fprintf(stderr, "\n");
 	exit(1);
 }
@@ -30,6 +32,7 @@ static struct option long_options[] = {
 	{"output",	required_argument,	0,	'o'},
 	{"size",	required_argument, 	0,	's'},
 	{"nframes",	required_argument,	0, 	'n'},
+	{"first-frame",	no_argument, 		0,	'1'},
 	{0, 0, 0, 0}
 };
 
@@ -38,7 +41,7 @@ static void parse_options(int argc, char **argv)
 	int c;
 	int index = 0;
 	while(1) {
-		c = getopt_long(argc, argv, "ho:s:n:", long_options, &index);
+		c = getopt_long(argc, argv, "ho:s:n:1", long_options, &index);
 		if(c < 0)
 			break;
 
@@ -55,6 +58,9 @@ static void parse_options(int argc, char **argv)
 				break;
 			case 'n':
 				option_nframes = atoi(optarg);
+				break;
+			case '1':
+				option_first_frame = 1;
 				break;
 			case 'h':
 			default:
@@ -106,10 +112,12 @@ int main(int argc, char **argv)
 			goto error_output;
 
 	for(i=0 ;; i++){
-		if (!input_getframe(input_state, &pic))
-			goto no_error;
+		if (!option_first_frame)
+			if (!input_getframe(input_state, &pic))
+				goto no_error;
 		pic.timestamp.tv_sec = i / 25;
 		pic.timestamp.tv_usec = (i * 40000) % 1000000;	// 25 FPS
+
 		if(!encoder_encode_frame(&pic, &encoded_pic, &header_pic))
 			goto error_encoder;
 
@@ -125,7 +133,7 @@ int main(int argc, char **argv)
 		encoder_release(&encoded_pic);
 
 		if(option_nframes > 0 && (i + 1) >= option_nframes)
-			break;
+			goto no_error;
 	}
 
 error_input:
