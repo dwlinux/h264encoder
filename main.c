@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 	clock_gettime(CLOCK_MONOTONIC, &tp_start);
 
 	for(i=0 ;; i++){
-		if (!option_first_frame)
+		if (!option_first_frame || i == 0)
 			if (!input_getframe(input_state, &pic))
 				goto no_error;
 		pic.timestamp.tv_sec = i / 25;
