@@ -13,12 +13,14 @@ static int option_width		= 0;
 static int option_height	= 0;
 static int option_nframes	= 0;
 static int option_first_frame	= 0;
+static int option_verbose	= 0;
 
 static void usage(char *name)
 {
 	fprintf(stderr, "Usage: %s [options] [rawfile]\n", name);
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "\t-h,  --help\n");
+	fprintf(stderr, "\t-v,  --verbose\n");
 	fprintf(stderr, "\t-o,  --output=<filename>\n");
 	fprintf(stderr, "\t-s,  --size=<width>x<height>    (required)\n");
 	fprintf(stderr, "\t-n,  --nframes=<number>         encode only first <number> of frames");
@@ -41,7 +43,7 @@ static void parse_options(int argc, char **argv)
 	int c;
 	int index = 0;
 	while(1) {
-		c = getopt_long(argc, argv, "ho:s:n:1", long_options, &index);
+		c = getopt_long(argc, argv, "hvo:s:n:1", long_options, &index);
 		if(c < 0)
 			break;
 
@@ -49,6 +51,9 @@ static void parse_options(int argc, char **argv)
 			c = -1;
 
 		switch(c) {
+			case 'v':
+				option_verbose = 1;
+				break;
 			case 'o':
 				option_output_filename = optarg;
 				break;
@@ -117,6 +122,9 @@ int main(int argc, char **argv)
 				goto no_error;
 		pic.timestamp.tv_sec = i / 25;
 		pic.timestamp.tv_usec = (i * 40000) % 1000000;	// 25 FPS
+
+		if (option_verbose)
+			fprintf(stderr, "frame: %4d\n", i);
 
 		if(!encoder_encode_frame(&pic, &encoded_pic, &header_pic))
 			goto error_encoder;
