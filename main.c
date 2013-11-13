@@ -110,7 +110,6 @@ int main(int argc, char **argv)
 
 	if (!pic.buffer)
 		goto error_input;
-	input_getframe(input_state, &pic);
 
 	if(option_output_filename)
 		if(!output_init(&pic, option_output_filename))
