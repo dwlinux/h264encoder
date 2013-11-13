@@ -24,8 +24,8 @@ static void usage(char *name)
 	fprintf(stderr, "\t-v,  --verbose\n");
 	fprintf(stderr, "\t-o,  --output=<filename>\n");
 	fprintf(stderr, "\t-s,  --size=<width>x<height>    (required)\n");
-	fprintf(stderr, "\t-n,  --nframes=<number>         encode only first <number> of frames");
-	fprintf(stderr, "\t-1,  --first-frame              repeat first frame");
+	fprintf(stderr, "\t-n,  --nframes=<number>         encode only first <number> of frames\n");
+	fprintf(stderr, "\t-1,  --first-frame              repeat first frame\n");
 	fprintf(stderr, "\n");
 	exit(1);
 }
