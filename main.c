@@ -14,17 +14,19 @@ static int option_height	= 0;
 
 static void usage(char *name)
 {
-	fprintf(stderr, "usage: %s [options] [rawfile]\n", name);
-	fprintf(stderr, "\t-w width,    -width=width     (required)\n");
-	fprintf(stderr, "\t-h height,   -height=height   (required)\n");
-	fprintf(stderr, "\t-o filename, -output=filename\n");
+	fprintf(stderr, "Usage: %s [options] [rawfile]\n", name);
+	fprintf(stderr, "Options:\n");
+	fprintf(stderr, "\t-h,  --help\n");
+	fprintf(stderr, "\t-s,  --size=<width>x<height>	(required)\n");
+	fprintf(stderr, "\t-o,  --output=<filename>\n");
 	fprintf(stderr, "\n");
+	exit(1);
 }
 
 static struct option long_options[] = {
+	{"help",	no_argument,		0,	'h'},
 	{"output",	required_argument,	0,	'o'},
-	{"width",	required_argument, 	0,	'w'},
-	{"height",	required_argument,	0, 	'h'},
+	{"size",	required_argument, 	0,	's'},
 	{0, 0, 0, 0}
 };
 
@@ -33,7 +35,7 @@ static void parse_options(int argc, char **argv)
 	int c;
 	int index = 0;
 	while(1) {
-		c = getopt_long(argc, argv, "o:w:h:", long_options, &index);
+		c = getopt_long(argc, argv, "ho:s:", long_options, &index);
 		if(c < 0)
 			break;
 
@@ -44,15 +46,13 @@ static void parse_options(int argc, char **argv)
 			case 'o':
 				option_output_filename = optarg;
 				break;
-			case 'w':
-				option_width = atoi(optarg);
+			case 's':
+				if(2 != sscanf(optarg, "%dx%d", &option_width, &option_height))
+					usage(argv[0]);
 				break;
 			case 'h':
-				option_height = atoi(optarg);
-				break;
 			default:
 				usage(argv[0]);
-				exit(1);
 				break;
 		}
 	}
@@ -73,7 +73,6 @@ int main(int argc, char **argv)
 
 	if (!option_width || !option_height) {
 		usage(argv[0]);
-		exit(1);
 	}
 
 	pic.width  = option_width;
