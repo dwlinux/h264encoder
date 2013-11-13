@@ -11,14 +11,16 @@ static char *option_input_filename  = NULL;
 static char *option_output_filename = NULL;
 static int option_width		= 0;
 static int option_height	= 0;
+static int option_nframes	= 0;
 
 static void usage(char *name)
 {
 	fprintf(stderr, "Usage: %s [options] [rawfile]\n", name);
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "\t-h,  --help\n");
-	fprintf(stderr, "\t-s,  --size=<width>x<height>	(required)\n");
 	fprintf(stderr, "\t-o,  --output=<filename>\n");
+	fprintf(stderr, "\t-s,  --size=<width>x<height>    (required)\n");
+	fprintf(stderr, "\t-n,  --nframes=<number>         encode only first <number> of frames");
 	fprintf(stderr, "\n");
 	exit(1);
 }
@@ -27,6 +29,7 @@ static struct option long_options[] = {
 	{"help",	no_argument,		0,	'h'},
 	{"output",	required_argument,	0,	'o'},
 	{"size",	required_argument, 	0,	's'},
+	{"nframes",	required_argument,	0, 	'n'},
 	{0, 0, 0, 0}
 };
 
@@ -35,7 +38,7 @@ static void parse_options(int argc, char **argv)
 	int c;
 	int index = 0;
 	while(1) {
-		c = getopt_long(argc, argv, "ho:s:", long_options, &index);
+		c = getopt_long(argc, argv, "ho:s:n:", long_options, &index);
 		if(c < 0)
 			break;
 
@@ -49,6 +52,9 @@ static void parse_options(int argc, char **argv)
 			case 's':
 				if(2 != sscanf(optarg, "%dx%d", &option_width, &option_height))
 					usage(argv[0]);
+				break;
+			case 'n':
+				option_nframes = atoi(optarg);
 				break;
 			case 'h':
 			default:
@@ -84,6 +90,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "rawvideo: %s\n", option_input_filename);
 	fprintf(stderr, "width: %d, height: %d\n", pic.width, pic.height);
 	fprintf(stderr, "output: %s\n", option_output_filename);
+	fprintf(stderr, "nframes: %d\n", option_nframes);
 
 	if(!encoder_init(&pic)){
 		fprintf(stderr,"failed to initialize encoder\n");
@@ -116,6 +123,9 @@ int main(int argc, char **argv)
 		}
 
 		encoder_release(&encoded_pic);
+
+		if(option_nframes > 0 && (i + 1) >= option_nframes)
+			break;
 	}
 
 error_input:
