@@ -13,6 +13,19 @@ Sample usage:
 
     avconv -i <input_video_file> -vf pad="trunc((iw+31)/32)*32" \
         -pix_fmt nv12 -f rawvideo pipe: |
-        simpleencoder.static -w <width> -h <height> [-o <output_file>]
+        simpleencoder.static -s <width>x<height> [-o <output_file>]
+
+With previous converted raw video files:
+
+    avconv -i <input_video_file> -vf pad="trunc((iw+31)/32)*32" \
+        -pix_fmt nv12 -f rawvideo <output_raw_video_file>
+
+If the end of the raw file name is as:
+
+    filename_<width>x<height>.nv12
+
+Can be used as follows:
+
+    simpleencoder.static <output_raw_video_file> [-o <output_file>]
 
 ---
